@@ -42,6 +42,7 @@ interface Variant {
   _id: string;
   price: number;
   discountprice?: number;
+  discount_percent?: number;
   size?: string;
   color?: string;
 }
@@ -52,13 +53,21 @@ interface Product {
   description: string;
   price: number;
   discount_price?: number;
+  discount_percent?: number;
   originalPrice?: number;
   discount?: number;
   category: string;
   image: string;
+  main_image_url?: string;
   stock: number;
   has_variants?: boolean;
   variants?: Variant[];
+}
+
+// Extended interface for display (includes variant info)
+interface ProductRow extends Product {
+  currentVariant?: Variant;
+  variantIndex?: number;
 }
 
 export default function AdminProductsPage() {
@@ -109,7 +118,10 @@ export default function AdminProductsPage() {
       setLoading(true);
       // Replace with your actual API endpoint
       const response = await api.get('/products/getAllProducts');
-      setProducts(response.data || []);
+      const productsData = response.data || [];
+      console.log("Fetched products:", productsData);
+      console.log("Products with variants:", productsData.filter((p: Product) => p.has_variants));
+      setProducts(productsData);
     } catch (error) {
       console.error("Failed to fetch products:", error);
       toast({
@@ -281,7 +293,32 @@ export default function AdminProductsPage() {
     setSelectedProduct(null);
   };
 
-  const filteredProducts = products.filter((product) =>
+  // Flatten products with variants into separate rows
+  const flattenProducts = (products: Product[]): ProductRow[] => {
+    const flattened: ProductRow[] = [];
+    
+    products.forEach((product) => {
+      if (product.has_variants && product.variants && product.variants.length > 0) {
+        console.log(`Product "${product.name}" has ${product.variants.length} variants:`, product.variants);
+        // Create a row for each variant
+        product.variants.forEach((variant, index) => {
+          flattened.push({
+            ...product,
+            currentVariant: variant,
+            variantIndex: index,
+          });
+        });
+      } else {
+        // Product without variants - add as single row
+        flattened.push(product);
+      }
+    });
+    
+    console.log(`Total rows after flattening: ${flattened.length} (from ${products.length} products)`);
+    return flattened;
+  };
+
+  const filteredProducts = flattenProducts(products).filter((product) =>
     product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     product.category.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -385,8 +422,8 @@ export default function AdminProductsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredProducts.map((product) => (
-                  <TableRow key={product._id}>
+                {filteredProducts.map((product, idx) => (
+                  <TableRow key={`${product._id}-${product.variantIndex ?? 'main'}-${idx}`}>
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <img
@@ -395,7 +432,17 @@ export default function AdminProductsPage() {
                           className="w-12 h-12 rounded object-cover"
                         />
                         <div>
-                          <div className="font-medium">{product.name}</div>
+                          <div className="font-medium">
+                            {product.name}
+                            {product.currentVariant && (
+                              <span className="ml-2 text-xs text-muted-foreground">
+                                {product.currentVariant.name}
+                                {/* ({product.currentVariant.size && `Size: ${product.currentVariant.size}`}
+                                {product.currentVariant.size && product.currentVariant.color && ', '}
+                                {product.currentVariant.color && `Color: ${product.currentVariant.color}`}) */}
+                              </span>
+                            )}
+                          </div>
                           <div className="text-sm text-muted-foreground truncate max-w-xs">
                             {product.description}
                           </div>
@@ -403,33 +450,39 @@ export default function AdminProductsPage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline">{product.category}</Badge>
+                      <Badge variant="outline">{product.category_name}</Badge>
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col">
-                        {/* Product without variants */}
-                        {!product.has_variants && product.discount_price != null ? (
+                        {/* Show current variant price if it exists */}
+                        {product.currentVariant ? (
                           <>
-                            <span className="font-medium">${product.discount_price.toFixed(2)}</span>
-                            <span className="text-sm text-muted-foreground line-through">
-                              ${product.price.toFixed(2)}
-                            </span>
+                            {product.currentVariant.discountprice != null ? (
+                              <>
+                                <span className="font-medium">${product.currentVariant.discountprice.toFixed(2)}</span>
+                                <span className="text-sm text-muted-foreground line-through">
+                                  ${product.currentVariant.price.toFixed(2)}
+                                </span>
+                              </>
+                            ) : (
+                              <span className="font-medium">${product.currentVariant.price.toFixed(2)}</span>
+                            )}
                           </>
-                        ) : !product.has_variants ? (
-                          <span className="font-medium">${product.price.toFixed(2)}</span>
-                        ) : null}
-                        
-                        {/* Product with variants */}
-                        {product.has_variants && product.variants && product.variants[0]?.discountprice != null ? (
+                        ) : (
+                          /* Product without variants */
                           <>
-                            <span className="font-medium">${product.variants[0].discountprice.toFixed(2)}</span>
-                            <span className="text-sm text-muted-foreground line-through">
-                              ${product.variants[0].price.toFixed(2)}
-                            </span>
+                            {product.discount_price != null ? (
+                              <>
+                                <span className="font-medium">${product.discount_price.toFixed(2)}</span>
+                                <span className="text-sm text-muted-foreground line-through">
+                                  ${product.price.toFixed(2)}
+                                </span>
+                              </>
+                            ) : (
+                              <span className="font-medium">${product.price.toFixed(2)}</span>
+                            )}
                           </>
-                        ) : product.has_variants && product.variants ? (
-                          <span className="font-medium">${product.variants[0].price.toFixed(2)}</span>
-                        ) : null}
+                        )}
                       </div>
                     </TableCell>
                     <TableCell>
@@ -438,10 +491,18 @@ export default function AdminProductsPage() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {((product?.has_variants && product?.variants[0]?.discount_percent != null)|| (product?.discount_percent)) ? (
-                        <Badge variant="default">{((product?.has_variants &&product?.variants[0]?.discount_percent) || (product?.discount_percent) )}% OFF</Badge>
+                      {product.currentVariant ? (
+                        product.currentVariant.discount_percent != null ? (
+                          <Badge variant="default">{product.currentVariant.discount_percent}% OFF</Badge>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )
                       ) : (
-                        <span className="text-muted-foreground">-</span>
+                        product.discount_percent != null ? (
+                          <Badge variant="default">{product.discount_percent}% OFF</Badge>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )
                       )}
                     </TableCell>
                     <TableCell className="text-right">
