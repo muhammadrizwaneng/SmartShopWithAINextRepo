@@ -7,6 +7,7 @@ import { CartProvider } from '@/contexts/cart-context';
 import Navbar from '@/components/layout/navbar';
 import Footer from '@/components/layout/footer';
 import { AIProvider } from '@/contexts/ai-context';
+import { ReduxProvider } from '@/components/providers/redux-provider';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -23,18 +24,20 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <AIProvider>
-            <CartProvider>
-              <div className="flex min-h-screen flex-col">
-                <Navbar />
-                <main className="flex-1">{children}</main>
-                <Footer />
-              </div>
-              <Toaster />
-            </CartProvider>
-          </AIProvider>
-        </ThemeProvider>
+        <ReduxProvider>
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+            <AIProvider>
+              <CartProvider>
+                <div className="flex min-h-screen flex-col">
+                  <Navbar />
+                  <main className="flex-1">{children}</main>
+                  <Footer />
+                </div>
+                <Toaster />
+              </CartProvider>
+            </AIProvider>
+          </ThemeProvider>
+        </ReduxProvider>
       </body>
     </html>
   );

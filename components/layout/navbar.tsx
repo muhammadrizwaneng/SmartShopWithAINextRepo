@@ -13,8 +13,11 @@ import { useTheme } from "next-themes";
 import { useCart } from "@/contexts/cart-context";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useAppSelector } from "@/store/hooks";
 
 const Navbar = () => {
+  const user = useAppSelector((state) => state.auth?.user);
+  // console.log("=-=-user",user)
   const [isScrolled, setIsScrolled] = useState(false);
   const { theme, setTheme } = useTheme();
   const { cartItemsCount } = useCart();
@@ -37,12 +40,20 @@ const Navbar = () => {
     setTheme(theme === "dark" ? "light" : "dark");
   };
 
+  // Check if user is admin
+  const isAdmin = user?.email === "muhammadrizwaneng@gmail.com";
+
   const navItems = [
     { name: "Home", href: "/" },
-    { name: "Shop", href: "/products" },
+    { name: "Shop", href: "/shop" },
     { name: "Categories", href: "/categories" },
     { name: "About", href: "/about" },
     { name: "Contact", href: "/contact" },
+  ];
+
+  // Admin-only nav items
+  const adminNavItems = [
+    { name: "Products", href: "/admin/products" },
   ];
   
   // Helper to check if a link is active (for desktop nav)
@@ -88,6 +99,19 @@ const Navbar = () => {
                 {item.name}
               </Link>
             ))}
+            {/* Admin-only links */}
+            {isAdmin && adminNavItems.map((item) => (
+              <Link
+                key={item.name}
+                href={item.href}
+                className={cn(
+                  "text-sm font-medium transition-colors hover:text-primary",
+                  isActive(item.href) ? "text-primary" : "text-foreground/70"
+                )}
+              >
+                {item.name}
+              </Link>
+            ))}
           </nav>
 
           {/* Actions */}
@@ -121,35 +145,36 @@ const Navbar = () => {
                 )}
               </Button>
             </Link>
-            
-            {/* User Account Icon */}
-            <Link href="/account">
-              <Button variant="ghost" size="icon">
-                <User className="h-5 w-5" />
-              </Button>
-            </Link>
-            
             {/* Desktop Sign In & Sign Up Buttons */}
-            <Link href="/signin" className="hidden lg:flex">
-              <Button 
-                size="sm"
-                // --- Conditional styling for active state ---
-                variant={isSignInActive ? "default" : "outline"} 
-              >
-                Sign In
-              </Button>
-            </Link>
+            {user && Object.keys(user).length > 0 ? (
+              <Link href="/account" className="hidden lg:flex">
+                <Button variant="ghost" size="icon">
+                  <User className="h-5 w-5" />
+                </Button>
+              </Link>
+            ) : (
+              <>
+              <Link href="/signin" className="hidden lg:flex">
+                <Button 
+                  size="sm"
+                  // --- Conditional styling for active state ---
+                  variant={isSignInActive ? "default" : "outline"} 
+                >
+                  Sign In
+                </Button>
+              </Link>
 
-            <Link href="/signup" className="hidden lg:flex">
-              <Button 
-                size="sm"
-                // --- Conditional styling for active state ---
-                variant={isSignUpActive ? "default" : "outline"} // Optional: make Sign Up active too
-              >
-                Sign Up
-              </Button>
-            </Link>
-
+              <Link href="/signup" className="hidden lg:flex">
+                <Button 
+                  size="sm"
+                  // --- Conditional styling for active state ---
+                  variant={isSignUpActive ? "default" : "outline"} // Optional: make Sign Up active too
+                >
+                  Sign Up
+                </Button>
+              </Link>
+              </>
+            )}
             {/* Mobile Menu */}
             <Sheet>
               <SheetTrigger asChild>
@@ -160,6 +185,20 @@ const Navbar = () => {
               <SheetContent side="right">
                 <nav className="flex flex-col gap-4 mt-8">
                   {navItems.map((item) => (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      className={cn(
+                        "text-lg font-medium transition-colors hover:text-primary",
+                        isActive(item.href) ? "text-primary" : "text-foreground"
+                      )}
+                    >
+                      {item.name}
+                    </Link>
+                  ))}
+                  
+                  {/* Admin-only links in mobile */}
+                  {isAdmin && adminNavItems.map((item) => (
                     <Link
                       key={item.name}
                       href={item.href}
