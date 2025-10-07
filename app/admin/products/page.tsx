@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAppSelector } from "@/store/hooks";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -340,7 +341,7 @@ export default function AdminProductsPage() {
             Manage your store's products, pricing, and inventory
           </p>
         </div>
-        <Button onClick={() => setIsAddDialogOpen(true)} size="lg">
+        <Button onClick={() => router.push('/admin/products/create')} size="lg">
           <Plus className="mr-2 h-5 w-5" />
           Add Product
         </Button>
@@ -426,13 +427,18 @@ export default function AdminProductsPage() {
                   <TableRow key={`${product._id}-${product.variantIndex ?? 'main'}-${idx}`}>
                     <TableCell>
                       <div className="flex items-center gap-3">
-                        <img
-                          src={product.main_image_url || "/placeholder.png"}
-                          alt={product.name}
-                          className="w-12 h-12 rounded object-cover"
-                        />
+                        <Link href={`/products/${product._id}`} className="hover:opacity-80 transition-opacity">
+                          <img
+                            src={product.main_image_url || "/placeholder.png"}
+                            alt={product.name}
+                            className="w-12 h-12 rounded object-cover"
+                          />
+                        </Link>
                         <div>
-                          <div className="font-medium">
+                          <Link 
+                            href={`/products/${product._id}`}
+                            className="font-medium hover:underline hover:text-primary transition-colors"
+                          >
                             {product.name}
                             {product.currentVariant && (
                               <span className="ml-2 text-xs text-muted-foreground">
@@ -442,7 +448,7 @@ export default function AdminProductsPage() {
                                 {product.currentVariant.color && `Color: ${product.currentVariant.color}`}) */}
                               </span>
                             )}
-                          </div>
+                          </Link>
                           <div className="text-sm text-muted-foreground truncate max-w-xs">
                             {product.description}
                           </div>
