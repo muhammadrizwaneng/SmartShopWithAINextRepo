@@ -8,26 +8,39 @@ import { ProductCard } from "@/components/product/product-card";
 import { Product } from "@/types/product";
 import { useAI } from "@/contexts/ai-context";
 import { getFeaturedProducts } from "@/lib/api";
+import { toast } from "@/hooks/use-toast";
+import api from "@/lib/axios";
 
 export function FeaturedProducts() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const { personalizedRecommendations } = useAI();
 
-  useEffect(() => {
-    const loadProducts = async () => {
+    useEffect(() => {
+      fetchProducts();
+    }, []);
+  
+    const fetchProducts = async () => {
       try {
-        const fetched = await getFeaturedProducts();
-        setProducts(fetched);
+        setLoading(true);
+        // Replace with your actual API endpoint
+        const response = await api.get('/products/getAllProducts');
+        const productsData = response.data || [];
+        console.log("Fetched products:", productsData);
+        console.log("Products with variants:", productsData.filter((p: Product) => p.has_variants));
+        setProducts(productsData);
       } catch (error) {
         console.error("Failed to fetch products:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load products",
+          variant: "destructive",
+        });
       } finally {
         setLoading(false);
       }
     };
-    
-    loadProducts();
-  }, []);
+  
 
   return (
     <section className="py-16">

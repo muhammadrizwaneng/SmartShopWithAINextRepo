@@ -1,43 +1,81 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import api from "@/lib/axios";
+
+interface Product {
+  _id: string;
+  name: string;
+  description: string;
+  price: number;
+  discount_price?: number;
+  discount_percent?: number;
+  category: string;
+  image: string;
+  main_image_url?: string;
+  images?: string[];
+  featured?: boolean;
+  isNew?: boolean;
+  rating?: number;
+  reviewCount?: number;
+  slug?: string;
+  has_variants?: boolean;
+  variants?: Array<{
+    _id: string;
+    price: number;
+    size?: string;
+    color?: string;
+    discount_price?: number;
+    discount_percent?: number;
+  }>;
+}
 
 export function HeroSection() {
   const [currentSlide, setCurrentSlide] = useState(0);
-  
-  const slides = [
-    {
-      title: "AI-Powered Shopping Experience",
-      subtitle: "Discover products tailored to your preferences",
-      image: "https://images.pexels.com/photos/5650026/pexels-photo-5650026.jpeg?auto=compress&cs=tinysrgb&w=1920",
-      cta: "Shop Now",
-      link: "/products"
-    },
-    {
-      title: "New Season Collection",
-      subtitle: "Explore our latest arrivals for spring 2025",
-      image: "https://images.pexels.com/photos/5868722/pexels-photo-5868722.jpeg?auto=compress&cs=tinysrgb&w=1920",
-      cta: "View Collection",
-      link: "/categories/spring-2025"
-    },
-    {
-      title: "Exclusive Deals",
-      subtitle: "Limited time offers on premium products",
-      image: "https://images.pexels.com/photos/6567607/pexels-photo-6567607.jpeg?auto=compress&cs=tinysrgb&w=1920",
-      cta: "See Offers",
-      link: "/deals"
-    }
-  ];
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % slides.length);
-    }, 6000);
-    return () => clearInterval(interval);
+    const fetchFeaturedProducts = async () => {
+      try {
+        const response = await api.get('/products/getAllProducts');
+        const allProducts = response.data || [];
+
+        setFeaturedProducts(allProducts);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+        setFeaturedProducts([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchFeaturedProducts();
+  }, []);
+
+  // Map featured products to slides
+  const slides = featuredProducts.map(product => ({
+    title: product.name,
+    subtitle: product.description.length > 100 
+      ? `${product.description.substring(0, 100)}...` 
+      : product.description,
+    image: product.main_image_url || product.images?.[0] || product.image || 
+           "https://images.pexels.com/photos/5650026/pexels-photo-5650026.jpeg?auto=compress&cs=tinysrgb&w=1920",
+    cta: product.discount_percent ? `Shop Now - ${product.discount_percent}% Off` : "Shop Now",
+    link: `/products/${product._id}`
+  }));
+
+  // Don't run the carousel effect if there are no slides
+  useEffect(() => {
+    if (slides.length > 1) {
+      const interval = setInterval(() => {
+        setCurrentSlide((prev) => (prev + 1) % slides.length);
+      }, 6000);
+      return () => clearInterval(interval);
+    }
   }, [slides.length]);
 
   return (

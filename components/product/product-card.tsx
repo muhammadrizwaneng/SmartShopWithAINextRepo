@@ -69,9 +69,9 @@ export function ProductCard({ product, recommended = false }: ProductCardProps) 
         )}
         
         <div className="relative pt-[100%]">
-          <Link href={`/products/${product.id}`}>
+          <Link href={`/products/${product._id}`}>
             <Image
-              src={product.image}
+              src={product.main_image_url}
               alt={product.name}
               fill
               className={cn(
@@ -81,9 +81,9 @@ export function ProductCard({ product, recommended = false }: ProductCardProps) 
                   : "opacity-100"
               )}
             />
-            {product.images && product.images.length > 0 && (
+            {product.gallery_images && product.gallery_images.length > 0 && (
               <Image
-                src={product.images[0]}
+                src={product.gallery_images[0]}
                 alt={`${product.name} - alternate view`}
                 fill
                 className={cn(
