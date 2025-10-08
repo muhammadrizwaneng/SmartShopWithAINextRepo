@@ -39,6 +39,7 @@ export function HeroSection() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    setIsLoading(true);
     const fetchFeaturedProducts = async () => {
       try {
         const response = await api.get('/products/getAllProducts');
