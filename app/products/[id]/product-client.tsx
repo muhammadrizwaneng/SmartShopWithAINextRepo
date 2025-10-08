@@ -81,44 +81,6 @@ export default function ProductClient() {
   const discountPercent = currentVariant?.discount_percent ?? product?.discount_percent;
   const stockCount = currentVariant?.stock ?? product?.stock ?? 0;
 
-  const handleDiscountApply = async () => {
-    try {
-      const discount = parseFloat(discountInput);
-      if (isNaN(discount) || discount < 0 || discount > 100) {
-        toast({
-          title: 'Invalid discount',
-          description: 'Please enter a valid discount percentage between 0 and 100',
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      const endpoint = currentVariant 
-        ? `/products/${id}/variants/${currentVariant._id}/discount`
-        : `/products/${id}/discount`;
-
-      await api.patch(endpoint, { discount_percent: discount });
-      
-      // Refresh product data
-      const response = await api.get(`/products/${id}`);
-      setProduct(response.data);
-      
-      toast({
-        title: 'Success',
-        description: `Discount of ${discount}% applied successfully`,
-      });
-      
-      setShowDiscountModal(false);
-      setDiscountInput('');
-    } catch (error) {
-      console.error('Error applying discount:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to apply discount',
-        variant: 'destructive',
-      });
-    }
-  };
 
   if (isLoading) {
     return (
@@ -349,41 +311,6 @@ export default function ProductClient() {
           </div>
         )}
       </div>
-
-      {/* Discount Modal */}
-      {showDiscountModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-background p-6 rounded-lg w-full max-w-md">
-            <h3 className="text-lg font-medium mb-4">Apply Discount</h3>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="discount">Discount Percentage</Label>
-                <Input
-                  id="discount"
-                  type="number"
-                  min="0"
-                  max="100"
-                  value={discountInput}
-                  onChange={(e) => setDiscountInput(e.target.value)}
-                  placeholder="Enter discount percentage"
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Enter a value between 0 and 100
-                </p>
-              </div>
-              <div className="flex justify-end gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowDiscountModal(false)}
-                >
-                  Cancel
-                </Button>
-                <Button onClick={handleDiscountApply}>Apply Discount</Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

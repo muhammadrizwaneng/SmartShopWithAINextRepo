@@ -79,7 +79,7 @@ export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  
+  const [selectedVariantId, setSelectedVariant] = useState<string | null>(null);
   // Dialog states
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -195,26 +195,48 @@ export default function AdminProductsPage() {
 
   const handleAddDiscount = async () => {
     if (!selectedProduct) return;
-
+  
     try {
       const discount = parseFloat(discountValue);
-      let updateData: any = { discount };
+      let payload: {
+        product_id: string;
+        discount_percent: number;
+        variant_name: string | null;
+        variant_id?: string;  // Optional: only for variants
+      } = {
+        product_id: selectedProduct._id,
+        discount_percent: discount,
+        variant_name: selectedVariantId ?.name// Default to null for product-level discount
+      };
 
       // Handle products without variants
       if (!selectedProduct.has_variants) {
-        const originalPrice = selectedProduct.price;
-        const discountPrice = originalPrice * (1 - discount / 100);
-        updateData.discount_price = discountPrice;
+        await api.patch(`/products/${selectedProduct._id}/discount`, payload);
       } 
       // Handle products with variants
-      else if (selectedProduct.variants && selectedProduct.variants.length > 0) {
-        updateData.variants = selectedProduct.variants.map(variant => ({
-          ...variant,
-          discountprice: variant.price * (1 - discount / 100),
+      else if (selectedProduct.variants?.length) {
+        // For variants, we'll update each selected variant
+        const selectedVariants = selectedProduct.variants.filter(v => v._id === selectedVariantId);
+        
+        if (selectedVariants.length === 0) {
+          toast({
+            title: "Error",
+            description: "Please select a variant to apply discount",
+            variant: "destructive",
+          });
+          return;
+        }
+  
+        // Apply discount to each selected variant
+        await Promise.all(selectedVariants.map(async (variant) => {
+          const variantPayload = {
+            ...payload,
+            variant_name: variant.name,
+            variant_id: variant._id
+          };
+          await api.patch(`/products/${selectedProduct._id}/variants/${variant._id}/discount`, variantPayload);
         }));
       }
-
-      await api.put(`/products/${selectedProduct._id}`, updateData);
       
       toast({
         title: "Success",
@@ -271,9 +293,10 @@ export default function AdminProductsPage() {
     setIsEditDialogOpen(true);
   };
 
-  const openDiscountDialog = (product: Product) => {
+  const openDiscountDialog = (product: Product,currentVariant:Variant) => {
     setSelectedProduct(product);
     setDiscountValue(product.discount?.toString() || "");
+    setSelectedVariant(currentVariant)
     setIsDiscountDialogOpen(true);
   };
 
@@ -523,7 +546,7 @@ export default function AdminProductsPage() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => openDiscountDialog(product)}
+                          onClick={() => openDiscountDialog(product,product?.currentVariant)}
                         >
                           <Percent className="h-4 w-4" />
                         </Button>
