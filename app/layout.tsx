@@ -14,6 +14,9 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata: Metadata = {
   title: 'SmartShop - AI-Powered Shopping Experience',
   description: 'Discover products with AI-powered recommendations',
+  icons:{
+    icon:"/images/favicon.png" 
+  }
 };
 
 export default function RootLayout({

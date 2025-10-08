@@ -1,10 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-// We need to use Link from 'next/link'
 import Link from "next/link";
-// We need usePathname from 'next/navigation' for checking the current route
-import { usePathname } from "next/navigation"; 
+import { usePathname } from "next/navigation";
+import Image from "next/image";
 import { ShoppingCart, Heart, User, Search, Menu, X, Package, Sun, Moon, LogIn, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,7 +44,6 @@ const Navbar = () => {
 
   const navItems = [
     { name: "Home", href: "/" },
-    { name: "Shop", href: "/shop" },
     { name: "Categories", href: "/categories" },
     { name: "About", href: "/about" },
     { name: "Contact", href: "/contact" },
@@ -80,9 +78,21 @@ const Navbar = () => {
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2">
-            <Package className="h-6 w-6" />
-            <span className="font-bold text-xl">SmartShop</span>
+          <Link href="/" className="flex items-center h-16">
+            <div className="relative w-32 h-12">
+              <Image
+                // src="/images/smartShopLogo.jpg"
+                src="/images/logo.png"
+                alt="SmartShop Logo"
+                fill
+                style={{
+                  objectFit: 'contain',
+                  width: '100%',
+                  height: '100%'
+                }}
+                priority
+              />
+            </div>
           </Link>
 
           {/* Desktop Navigation */}

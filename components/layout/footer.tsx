@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Package, Facebook, Twitter, Instagram, Github } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 
 const Footer = () => {
   return (
@@ -8,10 +9,26 @@ const Footer = () => {
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
           <div className="space-y-4">
-            <Link href="/" className="flex items-center gap-2">
+          <Link href="/" className="flex items-center h-16">
+              <div className="relative w-32 h-12">
+                <Image
+                  // src="/images/smartShopLogo.jpg"
+                  src="/images/logo.png"
+                  alt="SmartShop Logo"
+                  fill
+                  style={{
+                    objectFit: 'contain',
+                    width: '100%',
+                    height: '100%'
+                  }}
+                  priority
+                />
+              </div>
+            </Link>
+            {/* <Link href="/" className="flex items-center gap-2">
               <Package className="h-6 w-6" />
               <span className="font-bold text-xl">SmartShop</span>
-            </Link>
+            </Link> */}
             <p className="text-sm text-muted-foreground">
               AI-powered shopping experience with personalized recommendations
               and intelligent customer support.
