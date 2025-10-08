@@ -201,11 +201,19 @@ export default function CategoryPage({ params }: CategoryPageProps) {
                 <CardContent className="p-4 pt-0 space-y-3">
                   <div className="flex items-center gap-2">
                     <span className="text-xl font-bold">
-                      ${product.discount_price ? product.discount_price.toFixed(2) : product.price?.toFixed(2) || 'N/A'}
+                      ${!product.has_variants && product.discount_price ? product.discount_price.toFixed(2) : product.price?.toFixed(2) || 'N/A'}
                     </span>
-                    {product.discount_price && product.price && (
+                    {!product.has_variants && product.discount_price && product.price && (
                       <span className="text-sm text-muted-foreground line-through">
                         ${product.price.toFixed(2)}
+                      </span>
+                    )}
+                    <span className="text-xl font-bold">
+                      ${product.has_variants && product?.variants[0]?.discount_price ? product?.variantss[0]?.discount_price.toFixed(2) : product?.variants?.price?.toFixed(2) || 'N/A'}
+                    </span>
+                    {product.has_variants && product?.variants[0]?.discount_price && product?.variants[0]?.price && (
+                      <span className="text-sm text-muted-foreground line-through">
+                        ${product?.variants[0]?.price?.toFixed(2)}
                       </span>
                     )}
                   </div>

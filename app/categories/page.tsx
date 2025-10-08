@@ -20,35 +20,50 @@ export default function CategoriesPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-
+    let isMounted = true;
+    const controller = new AbortController();
+  
     const fetchCategories = async () => {
       try {
         setIsLoading(true);
-        const response = await api.get('/category/categories-with-product-count');
+        const response = await api.get('/category/categories-with-product-count', {
+          signal: controller.signal
+        });
+        
+        if (!isMounted) return;
+        
         const sortedCategories = response.data.sort((a: Category, b: Category) => 
           b.productCount - a.productCount
         );
         setCategories(sortedCategories);
       } catch (error) {
-        if (axios.isCancel(error) || error === "canceled") {
-          console.log('Request canceled:', error.message);
-        } else {
-          console.error('Error fetching products:', error);
-
-            toast({
-              title: 'Error',
-              description: 'Failed to load products',
-              variant: 'destructive',
-            });
-          
+        if (axios.isCancel(error)) {
+          console.log('Request was canceled');
+          return;
+        }
+        console.error('Error fetching categories:', error);
+        if (isMounted) {
+          toast({
+            title: 'Error',
+            description: 'Failed to load categories',
+            variant: 'destructive',
+          });
         }
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
-
+  
     fetchCategories();
-  }, []);
+  
+    // Cleanup function
+    return () => {
+      isMounted = false;
+      controller.abort();
+    };
+  }, []); // Empty dependency array means this runs once on mount
 
   // Loading skeleton
   if (isLoading) {
