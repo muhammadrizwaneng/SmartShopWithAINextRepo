@@ -202,50 +202,26 @@ export default function AdminProductsPage() {
         product_id: string;
         discount_percent: number;
         variant_name: string | null;
-        variant_id?: string;  // Optional: only for variants
       } = {
         product_id: selectedProduct._id,
         discount_percent: discount,
-        variant_name: selectedVariantId ?.name// Default to null for product-level discount
+        variant_name: selectedVariantId ?.name
       };
 
-      // Handle products without variants
-      if (!selectedProduct.has_variants) {
-        await api.patch(`/products/${selectedProduct._id}/discount`, payload);
-      } 
-      // Handle products with variants
-      else if (selectedProduct.variants?.length) {
-        // For variants, we'll update each selected variant
-        const selectedVariants = selectedProduct.variants.filter(v => v._id === selectedVariantId);
-        
-        if (selectedVariants.length === 0) {
+      console.log("=-=-=payload",payload)
+
+      const response = await api.post("/products/apply-discount", payload);
+
+      if(response.status == 200){
           toast({
-            title: "Error",
-            description: "Please select a variant to apply discount",
-            variant: "destructive",
+            title: "Success",
+            description: `${discount}% discount applied successfully`,
           });
-          return;
-        }
-  
-        // Apply discount to each selected variant
-        await Promise.all(selectedVariants.map(async (variant) => {
-          const variantPayload = {
-            ...payload,
-            variant_name: variant.name,
-            variant_id: variant._id
-          };
-          await api.patch(`/products/${selectedProduct._id}/variants/${variant._id}/discount`, variantPayload);
-        }));
+          
+          setIsDiscountDialogOpen(false);
+          setDiscountValue("");
+          fetchProducts();
       }
-      
-      toast({
-        title: "Success",
-        description: `${discount}% discount applied successfully`,
-      });
-      
-      setIsDiscountDialogOpen(false);
-      setDiscountValue("");
-      fetchProducts();
     } catch (error) {
       console.error("Failed to add discount:", error);
       toast({
@@ -752,13 +728,13 @@ export default function AdminProductsPage() {
                   ) : selectedProduct.variants && selectedProduct.variants.length > 0 ? (
                     <div>
                       <p className="font-medium mb-1">Variant prices after discount:</p>
-                      {selectedProduct.variants.map((variant, idx) => (
-                        <p key={idx}>
-                          {variant.size && `Size ${variant.size}`}{variant.color && ` - ${variant.color}`}: 
-                          ${(variant.price * (1 - parseFloat(discountValue) / 100)).toFixed(2)}
-                          {" "}(was ${variant.price.toFixed(2)})
+                      {/* {selectedProduct.variants.map((variant, idx) => ( */}
+                        <p>
+                          {selectedVariantId?.size && `Size ${selectedVariantId?.size}`}{selectedVariantId?.color && ` - ${selectedVariantId?.color}`}: 
+                          ${(selectedVariantId?.price * (1 - parseFloat(discountValue) / 100)).toFixed(2)}
+                          {" "}(was ${selectedVariantId?.price.toFixed(2)})
                         </p>
-                      ))}
+                      {/* ))} */}
                     </div>
                   ) : null}
                 </div>
