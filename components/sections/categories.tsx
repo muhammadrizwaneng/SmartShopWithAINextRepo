@@ -30,20 +30,30 @@ export function Categories() {
   };
 
   useEffect(() => {
+    let isMounted = true;
     const controller = new AbortController();
-    setIsLoading(true);
+    
     const fetchCategories = async () => {
       try {
+        setIsLoading(true);
+        setError(null);
+        
         const response = await api.get('/category/categories-with-product-count', {
           signal: controller.signal
         });
-        setCategories(response.data);
-        setError(null);
+        
+        // if (isMounted) {
+          setCategories(response.data);
+        // }
       } catch (err) {
-        console.error('Error fetching categories:', err);
-        setError('Failed to load categories');
+        if (isMounted) {
+          console.error('Error fetching categories:', err);
+          setError('Failed to load categories');
+        }
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
@@ -95,7 +105,7 @@ export function Categories() {
                 
                 return (
                   <Link 
-                    key={category._id}
+                    key={category.category_id}
                     href={`/categories/${category?.category_id}`}
                     className="group block relative h-[300px] rounded-lg overflow-hidden"
                   >

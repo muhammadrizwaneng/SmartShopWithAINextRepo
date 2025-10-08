@@ -119,7 +119,7 @@ export function ProductCard({ product, recommended = false }: ProductCardProps) 
             
             <Tooltip>
               <TooltipTrigger asChild>
-                <Link href={`/products/${product.id}`}>
+                <Link href={`/products/${product._id}`}>
                   <Button variant="secondary" size="icon" className="rounded-full shadow-md">
                     <Eye className="h-4 w-4" />
                   </Button>
@@ -141,25 +141,42 @@ export function ProductCard({ product, recommended = false }: ProductCardProps) 
               {product.category}
             </Link>
           </div>
-          <Link href={`/products/${product.id}`} className="block">
+          <Link href={`/products/${product._id}`} className="block">
             <h3 className="font-medium line-clamp-2 hover:text-primary transition-colors">
               {product.name}
             </h3>
           </Link>
           <div className="mt-2 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="font-semibold">
-                ${(product.price * (1 - product.discount / 100)).toFixed(2)}
-              </span>
-              {product.discount > 0 && (
-                <span className="text-sm text-muted-foreground line-through">
-                  ${product.price.toFixed(2)}
-                </span>
-              )}
+              {!product.has_variants && product.discount_price != null ? (
+                <>
+                  <span className="font-semibold text-primary">
+                    ${product.discount_price.toFixed(2)}
+                  </span>
+                  <span className="text-sm text-muted-foreground line-through">
+                    ${product.price.toFixed(2)}
+                  </span>
+                </>
+              ) : !product.has_variants ? (
+                <span className="font-semibold">${product.price.toFixed(2)}</span>
+              ) : null}
+              
+              {product.has_variants && product.variants?.[0]?.discount_price != null ? (
+                <>
+                  <span className="font-semibold text-primary">
+                    ${product.variants[0].discount_price.toFixed(2)}
+                  </span>
+                  <span className="text-sm text-muted-foreground line-through">
+                    ${product.variants[0].price.toFixed(2)}
+                  </span>
+                </>
+              ) : product.has_variants ? (
+                <span className="font-semibold">${product.variants[0]?.price?.toFixed(2)}</span>
+              ) : null}
             </div>
             {product.rating && (
               <div className="flex items-center">
-                <div className="flex">
+                <div className="flex">             
                   {Array.from({ length: 5 }).map((_, i) => (
                     <svg 
                       key={i}

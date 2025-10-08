@@ -53,7 +53,7 @@ const Footer = () => {
             <h3 className="font-medium mb-4">Shop</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="/products" className="text-sm text-muted-foreground hover:text-foreground">
+                <Link href="/admin/products" className="text-sm text-muted-foreground hover:text-foreground">
                   All Products
                 </Link>
               </li>
